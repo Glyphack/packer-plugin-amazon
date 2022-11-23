@@ -18,12 +18,13 @@ import (
 )
 
 type StepKeyPair struct {
-	Debug        bool
-	Comm         *communicator.Config
-	DebugKeyPath string
-	IsRestricted bool
-	Ctx          interpolate.Context
-	Tags         map[string]string
+	Debug           bool
+	Comm            *communicator.Config
+	SSMAgentEnabled bool
+	DebugKeyPath    string
+	IsRestricted    bool
+	Ctx             interpolate.Context
+	Tags            map[string]string
 
 	doCleanup bool
 }
@@ -56,6 +57,12 @@ func (s *StepKeyPair) Run(ctx context.Context, state multistep.StateBag) multist
 
 	if s.Comm.SSHTemporaryKeyPairName == "" {
 		ui.Say("Not using temporary keypair")
+		s.Comm.SSHKeyPairName = ""
+		return multistep.ActionContinue
+	}
+
+	if s.SSMAgentEnabled {
+		ui.Say("Skip creating KeyPair when using session_manager as ssh interface")
 		s.Comm.SSHKeyPairName = ""
 		return multistep.ActionContinue
 	}

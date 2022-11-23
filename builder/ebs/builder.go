@@ -178,6 +178,7 @@ func (b *Builder) Run(ctx context.Context, ui packersdk.Ui, hook packersdk.Hook)
 	if err != nil {
 		return nil, err
 	}
+	b.config.PackerDebug = true
 
 	ec2conn := ec2.New(session)
 	iam := iam.New(session)
@@ -296,12 +297,13 @@ func (b *Builder) Run(ctx context.Context, ui packersdk.Ui, hook packersdk.Hook)
 			AvailabilityZone:    b.config.AvailabilityZone,
 		},
 		&awscommon.StepKeyPair{
-			Debug:        b.config.PackerDebug,
-			Comm:         &b.config.RunConfig.Comm,
-			IsRestricted: b.config.IsChinaCloud(),
-			DebugKeyPath: fmt.Sprintf("ec2_%s.pem", b.config.PackerBuildName),
-			Tags:         b.config.RunTags,
-			Ctx:          b.config.ctx,
+			Debug:           b.config.PackerDebug,
+			Comm:            &b.config.RunConfig.Comm,
+			SSMAgentEnabled: b.config.SSMAgentEnabled(),
+			IsRestricted:    b.config.IsChinaCloud(),
+			DebugKeyPath:    fmt.Sprintf("ec2_%s.pem", b.config.PackerBuildName),
+			Tags:            b.config.RunTags,
+			Ctx:             b.config.ctx,
 		},
 		&awscommon.StepSecurityGroup{
 			SecurityGroupFilter:       b.config.SecurityGroupFilter,

@@ -1,32 +1,38 @@
-packer {
-  required_plugins {
-    amazon = {
-      version = ">= 1.0.0"
-      source = "github.com/hashicorp/amazon"
-    }
-  }
-}
+// packer {
+//   required_plugins {
+//     amazon = {
+//       version = ">= 1.0.8"
+//       source  = "github.com/hashicorp/amazon"
+//     }
+//   }
+// }
 
-data "amazon-ami" "ubuntu-xenial-1604-amd64" {
-  filters = {
-    name                = "ubuntu/images/*ubuntu-xenial-16.04-amd64-server-*"
-    root-device-type    = "ebs"
-    virtualization-type = "hvm"
-  }
-  most_recent = true
-  owners      = ["099720109477"]
-}
 
-locals { timestamp = regex_replace(timestamp(), "[- TZ:]", "") }
 
-source "amazon-ebs" "basic-example" {
-  ami_name      = "packer-example-${local.timestamp}"
-  communicator  = "ssh"
+source "amazon-ebs" "hvr" {
+  ami_name      = "hvr-${formatdate("YYYY-MM-DD-hhmmss", timestamp())}"
   instance_type = "t2.micro"
-  source_ami    = data.amazon-ami.ubuntu-xenial-1604-amd64.id
-  ssh_username  = "ubuntu"
+  region        = "eu-west-1"
+  source_ami_filter {
+    filters = {
+      name                = "amzn2-ami-hvm-*-x86_64-ebs"
+      root-device-type    = "ebs"
+      virtualization-type = "hvm"
+    }
+    most_recent = true
+    owners      = ["amazon"]
+
+  }
+  ssh_username = "ec2-user"
+  ssh_interface        = "session_manager"
+  communicator         = "ssh"
+  iam_instance_profile = "packer_profile"
 }
 
 build {
-  sources = ["source.amazon-ebs.basic-example"]
+  name = "hvr"
+  sources = [
+    "source.amazon-ebs.hvr"
+  ]
 }
+
